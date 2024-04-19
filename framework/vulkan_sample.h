@@ -1249,6 +1249,8 @@ inline void VulkanSample<bindingType>::update(float delta_time)
 	update_stats(delta_time);
 
 	command_buffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+//	command_buffer.begin(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+
 	stats->begin_sampling(command_buffer);
 
 	if constexpr (bindingType == BindingType::Cpp)
