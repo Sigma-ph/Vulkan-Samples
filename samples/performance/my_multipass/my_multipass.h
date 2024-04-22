@@ -42,6 +42,7 @@ private:
 
 	vkb::sg::PerspectiveCamera *camera{};
     float target_fps = 20;
+    std::vector<float> fps_list = {20, 30, 40, 60};
 
 	VkFormat          albedo_format{VK_FORMAT_R8G8B8A8_UNORM};
 	VkFormat          normal_format{VK_FORMAT_A2B10G10R10_UNORM_PACK32};
@@ -56,7 +57,8 @@ private:
         {
             GeometryPassCount,
             LightingPassCount,
-            PostProcessingPassCount
+            PostProcessingPassCount,
+            TargetFPS
         } type;
 
         /// Used as label by the GUI
@@ -71,7 +73,7 @@ private:
 
     uint16_t last_geometry_count{0};
     uint16_t last_lighting_count{0};
-    uint16_t last_postprocessing_count{0};
+	uint16_t last_postprocessing_count{0};
 
 
     std::vector<Config> configs = {
@@ -86,7 +88,12 @@ private:
             {/* config      = */ Config::PostProcessingPassCount,
                     /* description = */ "PostProcessingPassCount",
                     /* options     = */ {"1x", "4x", "8x", "12x"},
-                    /* value       = */ 0}};
+                    /* value       = */ 0},
+	        {/* config      = */ Config::TargetFPS,
+	            /* description = */ "Set Target FPS",
+	            /* options     = */ {"20", "30", "40", "60"},
+	            /* value       = */ 0},
+            };
 };
 
 std::unique_ptr<vkb::VulkanSample<vkb::BindingType::C>> create_my_multipass();

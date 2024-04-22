@@ -170,28 +170,32 @@ void MyMultipass::update(float delta_time)
 {
     if (configs[Config::GeometryPassCount].value != last_geometry_count)
     {
-        LOGI("Changing render technique");
+        LOGI("Changing GeometryPassCount");
         last_geometry_count = configs[Config::GeometryPassCount].value;
     }
     if (configs[Config::LightingPassCount].value != last_lighting_count)
     {
-        LOGI("Changing render technique");
+        LOGI("Changing LightingPassCount");
         last_lighting_count = configs[Config::LightingPassCount].value;
     }
     if (configs[Config::PostProcessingPassCount].value != last_postprocessing_count)
     {
-        LOGI("Changing render technique");
+        LOGI("Changing PostProcessingPassCount");
         last_postprocessing_count = configs[Config::PostProcessingPassCount].value;
     }
+	if (fps_list[configs[Config::TargetFPS].value] != target_fps)
+	{
+		LOGI("Changing FPS");
+		target_fps = fps_list[configs[Config::TargetFPS].value];
+	}
     if (delta_time < 1 / target_fps){
         int time_to_delay = (1 / target_fps - delta_time) * 1000;
-        std::chrono::microseconds duration(time_to_delay);
+        std::chrono::milliseconds duration(time_to_delay);
         std::this_thread::sleep_for(duration);
+        delta_time = 1 / target_fps;
     }
 
 	VulkanSample::update(delta_time);
-
-
 }
 
 
