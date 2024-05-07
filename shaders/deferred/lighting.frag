@@ -53,8 +53,19 @@ void main()
 	highp vec3 pos     = world_w.xyz / world_w.w;
 	vec4 albedo = subpassLoad(i_albedo);
 	// Transform from [0,1] to [-1,1]
-	vec3 normal = subpassLoad(i_normal).xyz;
+	lowp vec3 normal = subpassLoad(i_normal).xyz;
 	normal      = normalize(2.0 * normal - 1.0);
+
+	highp vec4 MyVector = {1.0, 1.0, 1.0, 1.0};
+	highp float scaler = 2.0;
+	for(int i=0; i<20; ++i){
+		highp vec4 test = {0.25, 0.25, 0.25, 0.25};
+		MyVector += test;
+		MyVector *= test;
+		MyVector = normalize(MyVector);
+		MyVector *= scaler;
+	}
+
 	// Calculate lighting
 	vec3 L = vec3(0.0);
 	for (uint i = 0U; i < DIRECTIONAL_LIGHT_COUNT; ++i)
@@ -70,6 +81,8 @@ void main()
 		L += apply_spot_light(lights_info.spot_lights[i], pos, normal);
 	}
 	vec3 ambient_color = vec3(0.2) * albedo.xyz;
-	
+
 	o_color = vec4(ambient_color + L * albedo.xyz, 1.0);
+	o_color *= MyVector;
+	
 }

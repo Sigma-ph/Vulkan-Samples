@@ -41,6 +41,17 @@ vec3 apply_point_light(Light light, vec3 pos, vec3 normal)
 	return ndotl * light.color.w * atten * light.color.rgb;
 }
 
+vec3 apply_point_light_medium(Light light, mediump vec3 pos, mediump vec3 normal)
+{
+    mediump vec3  world_to_light = light.position.xyz - pos;
+    mediump float dist           = length(world_to_light) * 0.005;
+    mediump float atten          = 1.0 / (dist * dist);
+    
+    world_to_light       = normalize(world_to_light);
+    mediump float ndotl          = clamp(dot(normal, world_to_light), 0.0, 1.0);
+    return ndotl * light.color.w * atten * light.color.rgb;
+}
+
 vec3 apply_spot_light(Light light, vec3 pos, vec3 normal)
 {
 	vec3  light_to_pixel   = normalize(pos - light.position.xyz);

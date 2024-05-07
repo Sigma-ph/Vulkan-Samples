@@ -27,6 +27,8 @@ private:
 
     std::unique_ptr<vkb::RenderPipeline> create_lighting_renderpass();
 
+    std::unique_ptr<vkb::RenderPipeline> create_lighting_renderpass_medium();
+
 	std::unique_ptr<vkb::PostProcessingPipeline> create_postfog_renderpass();
 	
 	virtual void draw_renderpass(vkb::CommandBuffer &command_buffer, vkb::RenderTarget &render_target) override;
@@ -35,6 +37,8 @@ private:
 	std::unique_ptr<vkb::RenderPipeline> geometry_render_pipeline{};
 
 	std::unique_ptr<vkb::RenderPipeline> lighting_render_pipeline{};
+
+    std::unique_ptr<vkb::RenderPipeline> lighting_render_pipeline_medium{};
 
 	std::unique_ptr<vkb::PostProcessingPipeline> postprocessing_pipeline{};
 
@@ -58,7 +62,8 @@ private:
             GeometryPassCount,
             LightingPassCount,
             PostProcessingPassCount,
-            TargetFPS
+            TargetFPS,
+            Precision
         } type;
 
         /// Used as label by the GUI
@@ -74,6 +79,7 @@ private:
     uint16_t last_geometry_count{0};
     uint16_t last_lighting_count{0};
 	uint16_t last_postprocessing_count{0};
+    uint16_t last_light_precision{0};
 
 
     std::vector<Config> configs = {
@@ -93,6 +99,10 @@ private:
 	            /* description = */ "Set Target FPS",
 	            /* options     = */ {"20", "30", "40", "60"},
 	            /* value       = */ 0},
+            {/* config      = */ Config::TargetFPS,
+                    /* description = */ "Set Target Precision",
+                    /* options     = */ {"High", "Medium"},
+                    /* value       = */ 0},
             };
 };
 

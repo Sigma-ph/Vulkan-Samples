@@ -150,6 +150,7 @@ bool MyMultipass::prepare(const vkb::ApplicationOptions &options)
 
     geometry_render_pipeline = create_geometry_renderpass();
 	lighting_render_pipeline = create_lighting_renderpass();
+    lighting_render_pipeline_medium = create_lighting_renderpass_medium();
 	postprocessing_pipeline  = create_postfog_renderpass();
 
 	// Enable stats
@@ -188,6 +189,11 @@ void MyMultipass::update(float delta_time)
 		LOGI("Changing FPS");
 		target_fps = fps_list[configs[Config::TargetFPS].value];
 	}
+    if (last_light_precision != configs[Config::Precision].value)
+    {
+        LOGI("Changing light precision");
+        last_light_precision = configs[Config::Precision].value;
+    }
     if (delta_time < 1 / target_fps){
         int time_to_delay = (1 / target_fps - delta_time) * 1000;
         std::chrono::milliseconds duration(time_to_delay);
@@ -266,6 +272,52 @@ std::unique_ptr<vkb::RenderPipeline> MyMultipass::create_lighting_renderpass()
 	lighting_render_pipeline->set_clear_value(vkb::gbuffer::get_clear_value());
 
 	return lighting_render_pipeline;
+}
+
+
+std::unique_ptr<vkb::RenderPipeline> MyMultipass::create_lighting_renderpass_medium()
+{
+    // Lighting subpass
+    auto lighting_vs      = vkb::ShaderSource{"deferred/lighting.vert"};
+    auto lighting_fs      = vkb::ShaderSource{"deferred/my_lighting.frag"};
+    auto lighting_subpass = std::make_unique<vkb::LightingSubpass>(get_render_context(), std::move(lighting_vs), std::move(lighting_fs), *camera, get_scene());
+
+    // Inputs are depth, albedo, and normal from the geometry subpass
+    lighting_subpass->set_input_attachments({1, 2, 3});
+    lighting_subpass->set_output_attachments({4});
+    // Create lighting pipeline
+    std::vector<std::unique_ptr<vkb::Subpass>> lighting_subpasses{};
+    lighting_subpasses.push_back(std::move(lighting_subpass));
+
+    auto lighting_render_pipeline = std::make_unique<vkb::RenderPipeline>(std::move(lighting_subpasses));
+
+    std::vector<vkb::LoadStoreInfo> load_store{5};
+
+    // Swapchain
+    load_store[0].load_op  = VK_ATTACHMENT_LOAD_OP_LOAD;
+    load_store[0].store_op = VK_ATTACHMENT_STORE_OP_STORE;
+
+    // Depth
+    load_store[1].load_op  = VK_ATTACHMENT_LOAD_OP_LOAD;
+    load_store[1].store_op = VK_ATTACHMENT_STORE_OP_STORE;
+
+    // Albedo
+    load_store[2].load_op  = VK_ATTACHMENT_LOAD_OP_LOAD;
+    load_store[2].store_op = VK_ATTACHMENT_STORE_OP_STORE;
+
+    // Normal
+    load_store[3].load_op  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    load_store[3].store_op = VK_ATTACHMENT_STORE_OP_STORE;
+
+    // Postprocess
+    load_store[4].load_op  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    load_store[4].store_op = VK_ATTACHMENT_STORE_OP_STORE;
+
+    lighting_render_pipeline->set_load_store(load_store);
+
+    lighting_render_pipeline->set_clear_value(vkb::gbuffer::get_clear_value());
+
+    return lighting_render_pipeline;
 }
 
 std::unique_ptr<vkb::PostProcessingPipeline> MyMultipass::create_postfog_renderpass()
@@ -403,10 +455,19 @@ void MyMultipass::draw_renderpasses(vkb::CommandBuffer &command_buffer, vkb::Ren
         }
         // Second render pass
         if(i == light_repeat_time - 1){
-            my_draw_pipeline(command_buffer, render_target, *lighting_render_pipeline, &get_gui());
+            if(last_light_precision == 0){
+                my_draw_pipeline(command_buffer, render_target, *lighting_render_pipeline, &get_gui());
+            }
+            else{
+                my_draw_pipeline(command_buffer, render_target, *lighting_render_pipeline_medium, &get_gui());
+            }
         }
-        else{
-            my_draw_pipeline(command_buffer, render_target, *lighting_render_pipeline);
+        else {
+            if (last_light_precision == 0) {
+                my_draw_pipeline(command_buffer, render_target, *lighting_render_pipeline);
+            } else {
+                my_draw_pipeline(command_buffer, render_target, *lighting_render_pipeline_medium);
+            }
         }
     }
 

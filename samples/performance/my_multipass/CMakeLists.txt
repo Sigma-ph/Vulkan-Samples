@@ -30,6 +30,7 @@ add_sample(
         "deferred/geometry.frag"
         "deferred/lighting.vert"
         "deferred/lighting.frag"
+        "deferred/my_lighting.frag"
         "postprocessing/postprocessing.vert"
         "postprocessing/my_post.frag"
 )
